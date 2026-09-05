@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sauti Studio — Badilisha Sauti</title>
+<style>
+  :root{
+    --ink:#131A33;
+    --panel:#1B2447;
+    --panel-2:#232E5C;
+    --line:#3A4580;
+    --paper:#F4F1E9;
+    --amber:#F2A93B;
+    --coral:#EF6F6C;
+    --teal:#6FC8B8;
+    --muted:#9BA3CC;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    min-height:100vh;
+    padding:0 0 90px;
+  }
+  h1,h2,h3{
+    font-family:'Space Grotesk',system-ui,sans-serif;
+    margin:0;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:0 18px;}
+  header{
+    padding:36px 18px 24px;
+    text-align:left;
+    border-bottom:1px solid var(--line);
+    margin-bottom:24px;
+  }
+  header .wrap{padding:0;}
+  .eyebrow{color:var(--amber);font-size:13px;margin-bottom:6px;font-weight:600;}
+  h1{font-size:30px;font-weight:700;line-height:1.15;color:var(--paper);}
+  header p{color:var(--muted);margin-top:10px;font-size:15px;line-height:1.5;max-width:46ch;}
+
+  section{margin-bottom:30px;}
+  .label-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;}
+  .label-row h2{font-size:17px;color:var(--paper);}
+  .label-row .sub{color:var(--muted);font-size:13px;margin-top:2px;}
+  .step-num{color:var(--muted);font-size:13px;}
+
+  .tabs{display:flex;gap:8px;margin-bottom:16px;}
+  .tab-btn{flex:1;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;}
+  .tab-btn.active{background:var(--amber);color:var(--ink);border-color:var(--amber);}
+
+  .source-pane{display:none;}
+  .source-pane.active{display:block;}
+
+  .rec-box{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:20px;text-align:center;}
+  .rec-btn{width:76px;height:76px;border-radius:50%;border:none;background:var(--coral);cursor:pointer;position:relative;display:inline-flex;align-items:center;justify-content:center;transition:transform .12s ease;}
+  .rec-btn:active{transform:scale(0.94);}
+  .rec-btn.recording{background:var(--paper);}
+  .rec-btn .dot{width:26px;height:26px;border-radius:50%;background:var(--paper);}
+  .rec-btn.recording .dot{border-radius:6px;background:var(--coral);}
+  .rec-status{margin-top:12px;font-size:14px;color:var(--muted);}
+  .rec-time{font-family:'Space Grotesk',monospace;font-size:22px;color:var(--paper);margin-top:8px;}
+
+  .file-drop{border:1px dashed var(--line);border-radius:14px;background:var(--panel);padding:28px 20px;text-align:center;cursor:pointer;}
+  .file-drop input{display:none;}
+  .file-drop .ft{color:var(--paper);font-weight:600;font-size:15px;}
+  .file-drop .fs{color:var(--muted);font-size:13px;margin-top:4px;}
+
+  .source-status{margin-top:12px;font-size:13px;color:var(--teal);min-height:18px;}
+
+  .preset-grid{display:flex;flex-direction:column;gap:8px;}
+  .preset-row{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:12px 14px;cursor:pointer;text-align:left;border-left:4px solid var(--line);font-family:inherit;color:var(--paper);width:100%;}
+  .preset-row.active{border-left-color:var(--amber);background:var(--panel-2);}
+  .preset-row .p-name{font-weight:600;font-size:14.5px;}
+  .preset-row .p-desc{color:var(--muted);font-size:12.5px;margin-top:2px;}
+
+  .custom-box{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:14px;margin-top:10px;}
+  .custom-box label{font-size:13px;color:var(--muted);display:flex;justify-content:space-between;}
+  .custom-box input[type=range]{width:100%;margin-top:8px;accent-color:var(--amber);}
+
+  .toggle-row{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:14px;color:var(--muted);}
+  .toggle-row input{accent-color:var(--teal);width:17px;height:17px;}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 18px;border-radius:10px;border:none;font-family:inherit;font-weight:600;font-size:14.5px;cursor:pointer;width:100%;}
+  .btn-primary{background:var(--amber);color:var(--ink);}
+  .btn-secondary{background:var(--panel-2);color:var(--paper);border:1px solid var(--line);}
+  .btn-teal{background:var(--teal);color:var(--ink);}
+  .btn-stop{background:var(--coral);color:var(--ink);}
+  .btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .btn-row{display:flex;gap:10px;margin-top:14px;}
+
+  .timeline{border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden;}
+  .tl-empty{padding:24px;text-align:center;color:var(--muted);font-size:14px;}
+  .tl-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);}
+  .tl-item:last-child{border-bottom:none;}
+  .tl-idx{width:26px;height:26px;border-radius:50%;background:var(--panel-2);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);flex-shrink:0;}
+  .tl-info{flex:1;min-width:0;}
+  .tl-name{font-size:14px;font-weight:600;color:var(--paper);}
+  .tl-sub{font-size:12px;color:var(--muted);}
+  .tl-controls{display:flex;gap:6px;flex-shrink:0;}
+  .icon-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--ink);color:var(--paper);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;}
+  .icon-btn:disabled{opacity:0.3;}
+
+  .status-line{font-size:13px;color:var(--muted);margin-top:10px;min-height:16px;}
+
+  .story-box{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:18px;}
+  .story-box.disabled{opacity:0.45;pointer-events:none;}
+  .transport{display:flex;align-items:center;gap:10px;}
+  .transport .icon-btn{width:44px;height:44px;font-size:17px;flex-shrink:0;}
+  .transport .time{font-family:'Space Grotesk',monospace;font-size:14px;color:var(--paper);flex:1;text-align:center;}
+  .mark-btn{margin-top:12px;}
+
+  .seg-list{margin-top:16px;display:flex;flex-direction:column;gap:8px;}
+  .seg-row{border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:10px;background:var(--panel-2);padding:10px 12px;}
+  .seg-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .seg-title{font-size:13px;font-weight:600;color:var(--paper);}
+  .seg-time{font-size:12px;color:var(--muted);}
+  .seg-row select{width:100%;padding:9px;border-radius:8px;border:1px solid var(--line);background:var(--ink);color:var(--paper);font-family:inherit;font-size:13.5px;}
+  .seg-merge{background:none;border:none;color:var(--coral);font-size:12px;cursor:pointer;padding:0;margin-top:6px;}
+
+  #nowPlaying{
+    position:fixed;left:0;right:0;bottom:0;
+    background:var(--panel-2);border-top:1px solid var(--line);
+    padding:12px 18px;display:none;align-items:center;gap:12px;
+    max-width:640px;margin:0 auto;
+  }
+  #nowPlaying.show{display:flex;}
+  #nowPlaying .np-label{flex:1;font-size:13px;color:var(--paper);}
+  #nowPlaying .np-label b{color:var(--teal);}
+
+  footer{text-align:center;color:var(--muted);font-size:12px;margin-top:34px;padding:0 18px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">Sauti Studio</div>
+    <h1>kavishe voice changes</h1>
+    <p>Rekodi kwa mic au pakia faili, chagua sauti, kisha unganishe wahusika wengi kwenye rekodi moja kwa ajili ya vichekesho na hadithi zako.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section>
+    <div class="label-row"><h2>1. Chanzo cha sauti</h2></div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="mic">🎙️ Microphone</button>
+      <button class="tab-btn" data-tab="file">📁 Faili</button>
+    </div>
+
+    <div class="source-pane active" id="pane-mic">
+      <div class="rec-box">
+        <button class="rec-btn" id="recBtn"><span class="dot"></span></button>
+        <div class="rec-status" id="recStatus">Bonyeza kuanza kurekodi</div>
+        <div class="rec-time" id="recTime" style="display:none;">00:00</div>
+      </div>
+    </div>
+
+    <div class="source-pane" id="pane-file">
+      <div class="file-drop" id="fileDrop">
+        <div class="ft">Bonyeza kuchagua faili la sauti</div>
+        <div class="fs">MP3, WAV, M4A n.k.</div>
+        <input type="file" id="fileInput" accept="audio/*">
+      </div>
+    </div>
+
+    <div class="source-status" id="sourceStatus"></div>
+  </section>
+
+  <section>
+    <div class="label-row"><h2>2. Chagua sauti (kipande chote)</h2></div>
+    <div class="preset-grid" id="presetGrid"></div>
+
+    <div class="custom-box">
+      <label>Rekebisha mwenyewe (semitone) <span id="semVal">0</span></label>
+      <input type="range" id="semSlider" min="-12" max="12" value="0" step="1">
+    </div>
+
+    <div class="toggle-row">
+      <input type="checkbox" id="echoToggle">
+      <label for="echoToggle">Ongeza mwangwi (echo) — kwa hadithi za kutisha. Ukiwasha, maneno huwa siyo wazi kama kawaida — hiyo ni sehemu ya athari, si hitilafu.</label>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="previewBtn" disabled>▶ Sikiliza</button>
+      <button class="btn btn-stop" id="stopPreviewBtn" disabled>⏹ Simamisha</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="addBtn" disabled>+ Ongeza kwenye Rekodi</button>
+    </div>
+    <div class="status-line" id="processStatus"></div>
+  </section>
+
+  <section>
+    <div class="label-row">
+      <h2>3. Wahusika wengi kwenye rekodi hii moja</h2>
+    </div>
+    <div class="label-row"><div class="sub">Sikiliza rekodi yako, weka alama pale sauti inapotakiwa kubadilika, kisha chagua sauti ya kila sehemu — mfano mwanamke, mtoto, mwanaume kwa kupokezana.</div></div>
+
+    <div class="story-box disabled" id="storyBox">
+      <div class="transport">
+        <button class="icon-btn" id="transportPlayBtn">▶</button>
+        <div class="time" id="playerTime">0:00.0 / 0:00.0</div>
+        <button class="icon-btn" id="transportStopBtn">⏹</button>
+      </div>
+      <button class="btn btn-secondary mark-btn" id="markBtn">➕ Weka Alama Hapa (gawanya)</button>
+
+      <div class="seg-list" id="segList"></div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="storyBtn">🎬 Tengeneza Hadithi na Ongeza kwenye Rekodi</button>
+      </div>
+      <div class="status-line" id="storyStatus"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="label-row"><h2>4. Rekodi yako</h2><span class="step-num" id="tlCount">vipande 0</span></div>
+    <div class="timeline" id="timeline">
+      <div class="tl-empty">Bado hakuna kipande. Ongeza sauti hapo juu ili kianze kuonekana hapa.</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="clearAllBtn" disabled>🗑 Futa Yote</button>
+    </div>
+    <div class="custom-box" style="margin-top:14px;">
+      <label for="exportFilename" style="display:block;margin-bottom:6px;">Jina la faili</label>
+      <input type="text" id="exportFilename" value="sauti-studio-recording" style="width:100%;padding:11px;border-radius:8px;border:1px solid var(--line);background:var(--ink);color:var(--paper);font-family:inherit;font-size:14px;">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-teal" id="exportBtn" disabled>⬇ Unganisha na Pakua WAV</button>
+    </div>
+    <div class="status-line" id="exportStatus"></div>
+  </section>
+
+</div>
+
+<div id="nowPlaying">
+  <div class="np-label">Inacheza: <b id="npText">—</b></div>
+  <button class="icon-btn" id="npStopBtn">⏹</button>
+</div>
+
+<footer>Kila kitu kinachakatwa ndani ya kivinjari chako — hakuna sauti inayotumwa mtandaoni.</footer>
+
+<script>
+const STANDARD_RATE = 44100;
+let audioCtx = null;
+function ensureCtx(){
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+// ---------- Unified playback control (so Play/Stop always works, only one sound at a time) ----------
+let activeSource = null;
+let activeOnStop = null;
+
+function stopAllPlayback(){
+  if (activeSource){
+    try{ activeSource.onended = null; activeSource.stop(); }catch(e){}
+  }
+  activeSource = null;
+  document.getElementById('nowPlaying').classList.remove('show');
+  document.getElementById('stopPreviewBtn').disabled = true;
+  if (activeOnStop){ const cb = activeOnStop; activeOnStop = null; cb(); }
+}
+
+function playBuffer(samples, label, onStopCb){
+  stopAllPlayback();
+  const ctx = ensureCtx();
+  const buf = ctx.createBuffer(1, samples.length, STANDARD_RATE);
+  buf.getChannelData(0).set(samples);
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.connect(ctx.destination);
+  src.onended = ()=>{ if (activeSource===src){ activeSource=null; document.getElementById('nowPlaying').classList.remove('show'); document.getElementById('stopPreviewBtn').disabled = true; if (activeOnStop){const cb=activeOnStop; activeOnStop=null; cb();} } };
+  src.start(0);
+  activeSource = src;
+  activeOnStop = onStopCb || null;
+  document.getElementById('npText').textContent = label;
+  document.getElementById('nowPlaying').classList.add('show');
+  document.getElementById('stopPreviewBtn').disabled = false;
+  return src;
+}
+
+document.getElementById('npStopBtn').addEventListener('click', stopAllPlayback);
+document.getElementById('stopPreviewBtn').addEventListener('click', stopAllPlayback);
+
+// ---------- DSP core ----------
+function hann(N){
+  const w = new Float32Array(N);
+  for (let i=0;i<N;i++) w[i] = 0.5*(1-Math.cos(2*Math.PI*i/Math.max(1,N-1)));
+  return w;
+}
+
+function timeStretch(samples, factor){
+  // WSOLA (Waveform-Similarity Overlap-Add): like basic OLA, but instead of
+  // always cutting the next grain at a fixed position, it searches nearby
+  // for the offset that lines up best with the previous grain's waveform.
+  // This avoids the "phase clash" that makes naive pitch-shifting sound
+  // garbled/robotic, and is the main fix for word clarity.
+  if (Math.abs(factor-1) < 0.001) return Float32Array.from(samples);
+  let grainSize = 2048;
+  if (samples.length < grainSize*2) grainSize = Math.max(256, Math.floor(samples.length/2) || 256);
+  const win = hann(grainSize);
+  const hopOut = Math.max(1, Math.floor(grainSize/4));
+  const hopIn = Math.max(1, Math.round(hopOut/factor));
+  const overlapLen = Math.max(1, grainSize - hopOut);
+  const corrWindow = Math.min(overlapLen, 600);
+  const corrStep = 4;
+  const tolerance = Math.min(hopOut, 200);
+
+  const outLen = Math.floor(samples.length*factor) + grainSize + 8;
+  const out = new Float32Array(outLen);
+  const weight = new Float32Array(outLen);
+
+  function addGrain(inPos, outPos){
+    const n = Math.min(grainSize, samples.length - inPos, out.length - outPos);
+    for (let i=0;i<n;i++){
+      out[outPos+i] += samples[inPos+i]*win[i];
+      weight[outPos+i] += win[i];
+    }
+  }
+
+  let anaPos = 0, synPos = 0;
+  addGrain(anaPos, synPos);
+
+  while (true){
+    const nominalAna = anaPos + hopIn;
+    const natural = anaPos + hopOut;
+    if (nominalAna + grainSize > samples.length) break;
+    let chosen = nominalAna;
+    if (natural + corrWindow <= samples.length){
+      const searchStart = Math.max(0, nominalAna - tolerance);
+      const searchEnd = Math.min(samples.length - grainSize, nominalAna + tolerance);
+      let bestScore = -Infinity, bestCand = nominalAna;
+      for (let cand = searchStart; cand <= searchEnd; cand++){
+        let score = 0;
+        for (let k=0;k<corrWindow;k+=corrStep){
+          score += samples[cand+k]*samples[natural+k];
+        }
+        if (score > bestScore){ bestScore = score; bestCand = cand; }
+      }
+      chosen = bestCand;
+    }
+    anaPos = chosen;
+    synPos += hopOut;
+    addGrain(anaPos, synPos);
+  }
+
+  for (let i=0;i<out.length;i++){
+    if (weight[i] > 1e-4) out[i] /= weight[i];
+  }
+  const finalLen = Math.max(1, Math.floor(samples.length*factor));
+  return out.slice(0, finalLen);
+}
+
+async function resampleByRate(samples, sampleRate, rate){
+  if (Math.abs(rate-1) < 0.001) return Float32Array.from(samples);
+  const ctx = ensureCtx();
+  const buf = ctx.createBuffer(1, samples.length, sampleRate);
+  buf.getChannelData(0).set(samples);
+  const outLen = Math.max(1, Math.ceil(samples.length/rate));
+  const offline = new OfflineAudioContext(1, outLen, sampleRate);
+  const src = offline.createBufferSource();
+  src.buffer = buf;
+  src.playbackRate.value = rate;
+  src.connect(offline.destination);
+  src.start(0);
+  const rendered = await offline.startRendering();
+  return rendered.getChannelData(0).slice();
+}
+
+function maxAbs(arr){ let m=0; for (let i=0;i<arr.length;i++){ const a=Math.abs(arr[i]); if (a>m) m=a; } return m; }
+
+// Simple one-pole filters, used both for the telephone effect and for
+// smoothing out the grainy/scratchy texture left by pitch-shifting.
+function lowpassOnePole(x, fs, fc){
+  const rc = 1/(2*Math.PI*fc);
+  const dt = 1/fs;
+  const alpha = dt/(rc+dt);
+  const y = new Float32Array(x.length);
+  y[0] = x[0]*alpha;
+  for (let i=1;i<x.length;i++) y[i] = y[i-1] + alpha*(x[i]-y[i-1]);
+  return y;
+}
+function highpassOnePole(x, fs, fc){
+  const rc = 1/(2*Math.PI*fc);
+  const dt = 1/fs;
+  const alpha = rc/(rc+dt);
+  const y = new Float32Array(x.length);
+  y[0] = x[0];
+  for (let i=1;i<x.length;i++) y[i] = alpha*(y[i-1] + x[i]-x[i-1]);
+  return y;
+}
+
+// Gently rolls off harsh high frequencies introduced by the pitch-shift
+// grains, without dulling speech intelligibility (which lives below ~4kHz).
+function softenSamples(samples, sampleRate){
+  let y = lowpassOnePole(samples, sampleRate, 7500);
+  y = lowpassOnePole(y, sampleRate, 7500);
+  return y;
+}
+
+function applyExtra(samples, sampleRate, extra){
+  if (!extra) return samples;
+  const before = maxAbs(samples);
+  let out;
+  if (extra === 'phone'){
+    // Classic telephone bandwidth (~300Hz-3400Hz) plus a touch of
+    // saturation, to sound like a voice call / kwenye simu.
+    let y = highpassOnePole(samples, sampleRate, 300);
+    y = highpassOnePole(y, sampleRate, 300);
+    y = lowpassOnePole(y, sampleRate, 3400);
+    y = lowpassOnePole(y, sampleRate, 3400);
+    out = new Float32Array(y.length);
+    for (let i=0;i<y.length;i++) out[i] = Math.tanh(y[i]*1.6)/Math.tanh(1.6);
+  } else {
+    out = new Float32Array(samples.length);
+    for (let i=0;i<samples.length;i++){
+      const t = i/sampleRate;
+      if (extra==='robot') out[i] = samples[i]*Math.sin(2*Math.PI*35*t);
+      else if (extra==='tremolo') out[i] = samples[i]*(1+0.25*Math.sin(2*Math.PI*5.5*t));
+      else out[i]=samples[i];
+    }
+  }
+  const after = maxAbs(out);
+  if (after > 1e-4){
+    const g = Math.min(3, before/after);
+    for (let i=0;i<out.length;i++) out[i]*=g;
+  }
+  return out;
+}
+
+function addEcho(samples, sampleRate, delayMs=150, decay=0.28, repeats=2){
+  const delay = Math.round(sampleRate*delayMs/1000);
+  const padLen = samples.length + delay*repeats;
+  const out = new Float32Array(padLen);
+  out.set(samples, 0);
+  for (let r=1;r<=repeats;r++){
+    const d = delay*r;
+    const g = Math.pow(decay, r);
+    for (let i=0;i<samples.length;i++){
+      out[i+d] += samples[i]*g;
+    }
+  }
+  const peak = maxAbs(out);
+  if (peak > 1) for (let i=0;i<out.length;i++) out[i] /= peak;
+  return out;
+}
+
+async function processVoice(samples, sampleRate, semitones, extra, echoOn){
+  const ratio = Math.pow(2, semitones/12);
+  const wasShifted = Math.abs(ratio-1) >= 0.001;
+  let processed;
+  if (!wasShifted){
+    processed = Float32Array.from(samples);
+  } else {
+    const stretched = timeStretch(samples, ratio);
+    processed = await resampleByRate(stretched, sampleRate, ratio);
+  }
+  processed = applyExtra(processed, sampleRate, extra);
+  if (wasShifted || extra) processed = softenSamples(processed, sampleRate);
+  if (echoOn) processed = addEcho(processed, sampleRate);
+  return processed;
+}
+
+async function loadAsMono(arrayBuffer){
+  const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const decoded = await tempCtx.decodeAudioData(arrayBuffer);
+  const outLen = Math.max(1, Math.ceil(decoded.duration*STANDARD_RATE));
+  const offline = new OfflineAudioContext(1, outLen, STANDARD_RATE);
+  const src = offline.createBufferSource();
+  src.buffer = decoded;
+  src.connect(offline.destination);
+  src.start(0);
+  const rendered = await offline.startRendering();
+  tempCtx.close();
+  return rendered.getChannelData(0).slice();
+}
+
+function encodeWav(samples, sampleRate){
+  const buffer = new ArrayBuffer(44 + samples.length*2);
+  const view = new DataView(buffer);
+  function writeStr(offset, str){ for (let i=0;i<str.length;i++) view.setUint8(offset+i, str.charCodeAt(i)); }
+  writeStr(0,'RIFF');
+  view.setUint32(4, 36 + samples.length*2, true);
+  writeStr(8,'WAVE');
+  writeStr(12,'fmt ');
+  view.setUint32(16,16,true);
+  view.setUint16(20,1,true);
+  view.setUint16(22,1,true);
+  view.setUint32(24,sampleRate,true);
+  view.setUint32(28,sampleRate*2,true);
+  view.setUint16(32,2,true);
+  view.setUint16(34,16,true);
+  writeStr(36,'data');
+  view.setUint32(40, samples.length*2, true);
+  let offset = 44;
+  for (let i=0;i<samples.length;i++){
+    let s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(offset, s<0 ? s*0x8000 : s*0x7FFF, true);
+    offset += 2;
+  }
+  return new Blob([view], {type:'audio/wav'});
+}
+
+function fmtTime(t){
+  const m = Math.floor(t/60);
+  const s = (t%60).toFixed(1).padStart(4,'0');
+  return `${m}:${s}`;
+}
+
+// Trims leading/trailing silence from a raw take so clips don't start/end
+// with an awkward dead-air gap.
+function trimSilence(samples, sampleRate, thresholdDb=-42, paddingMs=120){
+  const threshold = Math.pow(10, thresholdDb/20);
+  let start = 0, end = samples.length-1;
+  while (start < samples.length && Math.abs(samples[start]) < threshold) start++;
+  while (end > start && Math.abs(samples[end]) < threshold) end--;
+  const pad = Math.round(sampleRate*paddingMs/1000);
+  start = Math.max(0, start-pad);
+  end = Math.min(samples.length-1, end+pad);
+  if (end <= start) return samples;
+  return samples.slice(start, end+1);
+}
+
+// Joins several clips with a short equal-power crossfade at each seam so
+// splices don't click/pop.
+function concatWithCrossfade(parts, sampleRate, fadeMs=15){
+  const usable = parts.filter(p=>p && p.length>0);
+  if (usable.length === 0) return new Float32Array(0);
+  const fadeLen = Math.max(1, Math.round(sampleRate*fadeMs/1000));
+  const totalMax = usable.reduce((s,p)=>s+p.length,0);
+  const out = new Float32Array(totalMax);
+  let pos = 0;
+  usable.forEach((p, i)=>{
+    if (i===0){ out.set(p,0); pos=p.length; return; }
+    const fl = Math.min(fadeLen, p.length, pos);
+    for (let k=0;k<fl;k++){
+      const t = k/fl;
+      const gOut = Math.cos(t*Math.PI/2);
+      const gIn = Math.sin(t*Math.PI/2);
+      out[pos-fl+k] = out[pos-fl+k]*gOut + p[k]*gIn;
+    }
+    for (let k=fl;k<p.length;k++){
+      out[pos-fl+k] = p[k];
+    }
+    pos = pos - fl + p.length;
+  });
+  return out.slice(0,pos);
+}
+
+// ---------- Presets ----------
+const PRESETS = [
+  {id:'kawaida', name:'Kawaida (Bila mabadiliko)', semitones:0,   extra:null,      desc:'Sauti yako halisi'},
+  {id:'kiume',   name:'Kiume (Mwanaume)',          semitones:-4,  extra:null,      desc:'Sauti nzito, ya kawaida ya mwanaume'},
+  {id:'kike',    name:'Kike (Mwanamke)',           semitones:4,   extra:null,      desc:'Sauti nyororo, ya juu kidogo'},
+  {id:'mvulana', name:'Mtoto wa Kiume',            semitones:6,   extra:null,      desc:'Sauti ya juu, ya kitoto'},
+  {id:'msichana',name:'Mtoto wa Kike',             semitones:7,   extra:null,      desc:'Sauti ya juu zaidi'},
+  {id:'mzee',    name:'Mzee / Babu',               semitones:-6,  extra:'tremolo', desc:'Nzito na kidogo inatetemeka'},
+  {id:'jitu',    name:'Jitu / Monster',            semitones:-10, extra:null,      desc:'Nzito sana, ya kutisha'},
+  {id:'roboti',  name:'Roboti',                    semitones:0,   extra:'robot',   desc:'Sauti ya kimtambo, inavuma'},
+  {id:'simu',    name:'Kwenye Simu',               semitones:0,   extra:'phone',   desc:'Kama unavyosikika kwenye call ya simu'},
+  {id:'kicheko', name:'Kichekesho (Chipmunk)',     semitones:10,  extra:null,      desc:'Sauti ya juu sana — kwa sababu ya mabadiliko makubwa, maneno huwa magumu kueleweka'},
+  {id:'custom',  name:'Rekebisha Mwenyewe',        semitones:0,   extra:null,      desc:'Tumia kitelezi hapa chini'},
+];
+
+function getPreset(id){ return PRESETS.find(p=>p.id===id) || PRESETS[0]; }
+
+let selectedPreset = PRESETS[0];
+let rawSamples = null;       // Float32Array @ STANDARD_RATE, current source clip
+let previewSamples = null;   // last processed result (step 2)
+let timeline = [];           // {label, samples}
+let tlCounter = 0;
+let segments = null;         // [{start,end,presetId}]
+
+// ---------- UI: tabs ----------
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.source-pane').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('pane-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ---------- UI: presets (step 2) ----------
+const presetGrid = document.getElementById('presetGrid');
+function buildPresetGrid(){
+  presetGrid.innerHTML = '';
+  PRESETS.forEach(p=>{
+    const row = document.createElement('button');
+    row.className = 'preset-row' + (p.id===selectedPreset.id ? ' active' : '');
+    row.innerHTML = `<div><div class="p-name">${p.name}</div><div class="p-desc">${p.desc}</div></div>`;
+    row.addEventListener('click', ()=>{
+      selectedPreset = p;
+      document.querySelectorAll('#presetGrid .preset-row').forEach(r=>r.classList.remove('active'));
+      row.classList.add('active');
+      document.getElementById('semSlider').value = p.semitones;
+      document.getElementById('semVal').textContent = p.semitones;
+      clearPreview();
+    });
+    presetGrid.appendChild(row);
+  });
+}
+buildPresetGrid();
+
+const semSlider = document.getElementById('semSlider');
+semSlider.addEventListener('input', ()=>{
+  document.getElementById('semVal').textContent = semSlider.value;
+  const customPreset = getPreset('custom');
+  customPreset.semitones = parseInt(semSlider.value, 10);
+  selectedPreset = customPreset;
+  document.querySelectorAll('#presetGrid .preset-row').forEach((r,i)=>r.classList.toggle('active', PRESETS[i].id==='custom'));
+  clearPreview();
+});
+
+document.getElementById('echoToggle').addEventListener('change', clearPreview);
+
+function clearPreview(){
+  previewSamples = null;
+  document.getElementById('previewBtn').disabled = !rawSamples;
+  document.getElementById('addBtn').disabled = true;
+  document.getElementById('processStatus').textContent = rawSamples ? 'Bonyeza "Sikiliza" kusikia mabadiliko.' : '';
+}
+
+// ---------- Recording ----------
+let mediaRecorder, recordedChunks=[], mediaStream, recTimer, recSeconds=0;
+const recBtn = document.getElementById('recBtn');
+const recStatus = document.getElementById('recStatus');
+const recTime = document.getElementById('recTime');
+
+recBtn.addEventListener('click', async ()=>{
+  if (recBtn.classList.contains('recording')){
+    mediaRecorder.stop();
+    return;
+  }
+  try{
+    mediaStream = await navigator.mediaDevices.getUserMedia({audio:true});
+  }catch(err){
+    recStatus.textContent = 'Imeshindikana kufikia microphone.';
+    return;
+  }
+  recordedChunks = [];
+  mediaRecorder = new MediaRecorder(mediaStream);
+  mediaRecorder.ondataavailable = e=>{ if (e.data.size>0) recordedChunks.push(e.data); };
+  mediaRecorder.onstop = async ()=>{
+    mediaStream.getTracks().forEach(t=>t.stop());
+    clearInterval(recTimer);
+    recBtn.classList.remove('recording');
+    recStatus.textContent = 'Inachakata...';
+    const blob = new Blob(recordedChunks, {type: mediaRecorder.mimeType || 'audio/webm'});
+    const arrBuf = await blob.arrayBuffer();
+    try{
+      rawSamples = await loadAsMono(arrBuf);
+      rawSamples = trimSilence(rawSamples, STANDARD_RATE);
+      onNewRawAudio();
+      const dur = (rawSamples.length/STANDARD_RATE).toFixed(1);
+      recStatus.textContent = `Sauti imerekodiwa (${dur}s). Chagua sauti chini.`;
+      document.getElementById('sourceStatus').textContent = `✓ Umerekodi sauti ya sekunde ${dur}`;
+    }catch(err){
+      recStatus.textContent = 'Imeshindikana kusoma rekodi. Jaribu tena.';
+    }
+  };
+  mediaRecorder.start();
+  recBtn.classList.add('recording');
+  recStatus.textContent = 'Inarekodi... bonyeza tena kusimamisha';
+  recSeconds = 0;
+  recTime.style.display = 'block';
+  recTime.textContent = '00:00';
+  recTimer = setInterval(()=>{
+    recSeconds++;
+    const m = String(Math.floor(recSeconds/60)).padStart(2,'0');
+    const s = String(recSeconds%60).padStart(2,'0');
+    recTime.textContent = `${m}:${s}`;
+  }, 1000);
+});
+
+// ---------- File upload ----------
+const fileDrop = document.getElementById('fileDrop');
+const fileInput = document.getElementById('fileInput');
+fileDrop.addEventListener('click', ()=>fileInput.click());
+fileInput.addEventListener('change', async ()=>{
+  const file = fileInput.files[0];
+  if (!file) return;
+  document.getElementById('sourceStatus').textContent = 'Inapakia faili...';
+  try{
+    const arrBuf = await file.arrayBuffer();
+    rawSamples = await loadAsMono(arrBuf);
+    rawSamples = trimSilence(rawSamples, STANDARD_RATE);
+    onNewRawAudio();
+    const dur = (rawSamples.length/STANDARD_RATE).toFixed(1);
+    document.getElementById('sourceStatus').textContent = `✓ Faili "${file.name}" limepakiwa (${dur}s)`;
+  }catch(err){
+    document.getElementById('sourceStatus').textContent = 'Imeshindikana kusoma faili hili.';
+  }
+});
+
+function onNewRawAudio(){
+  clearPreview();
+  const duration = rawSamples.length/STANDARD_RATE;
+  segments = [{start:0, end:duration, presetId:'kawaida'}];
+  playheadTime = 0;
+  document.getElementById('storyBox').classList.remove('disabled');
+  updatePlayerTime();
+  renderSegments();
+}
+
+// ---------- Preview / Add (step 2, whole clip) ----------
+const previewBtn = document.getElementById('previewBtn');
+const addBtn = document.getElementById('addBtn');
+const processStatus = document.getElementById('processStatus');
+
+previewBtn.addEventListener('click', async ()=>{
+  if (!rawSamples) return;
+  ensureCtx();
+  previewBtn.disabled = true;
+  processStatus.textContent = 'Inachakata sauti...';
+  try{
+    const echoOn = document.getElementById('echoToggle').checked;
+    previewSamples = await processVoice(rawSamples, STANDARD_RATE, selectedPreset.semitones, selectedPreset.extra, echoOn);
+    playBuffer(previewSamples, selectedPreset.name, ()=>{ previewBtn.disabled=false; });
+    processStatus.textContent = 'Inacheza... bonyeza "Ongeza kwenye Rekodi" ukipenda.';
+    addBtn.disabled = false;
+  }catch(err){
+    processStatus.textContent = 'Hitilafu wakati wa kuchakata sauti.';
+    previewBtn.disabled = false;
+  }
+});
+
+addBtn.addEventListener('click', ()=>{
+  if (!previewSamples) return;
+  tlCounter++;
+  timeline.push({ id: tlCounter, label: selectedPreset.name, samples: previewSamples });
+  renderTimeline();
+  processStatus.textContent = 'Imeongezwa kwenye rekodi ✓';
+});
+
+// ---------- Step 3: multi-voice within one recording ----------
+let playheadTime = 0;
+let transportPlaying = false;
+
+function updatePlayerTime(){
+  const dur = rawSamples ? rawSamples.length/STANDARD_RATE : 0;
+  document.getElementById('playerTime').textContent = fmtTime(playheadTime)+' / '+fmtTime(dur);
+}
+
+document.getElementById('transportPlayBtn').addEventListener('click', ()=>{
+  if (!rawSamples) return;
+  if (transportPlaying){
+    stopAllPlayback();
+    return;
+  }
+  const dur = rawSamples.length/STANDARD_RATE;
+  const startOffset = playheadTime >= dur - 0.05 ? 0 : playheadTime;
+  const ctx = ensureCtx();
+  stopAllPlayback();
+  const buf = ctx.createBuffer(1, rawSamples.length, STANDARD_RATE);
+  buf.getChannelData(0).set(rawSamples);
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.connect(ctx.destination);
+  const startCtxTime = ctx.currentTime;
+  src.start(0, startOffset);
+  activeSource = src;
+  transportPlaying = true;
+  document.getElementById('transportPlayBtn').textContent = '⏸';
+  document.getElementById('nowPlaying').classList.remove('show');
+  let raf;
+  function tick(){
+    if (!transportPlaying) return;
+    const elapsed = startOffset + (ctx.currentTime - startCtxTime);
+    playheadTime = Math.min(elapsed, dur);
+    updatePlayerTime();
+    if (elapsed >= dur){
+      transportPlaying = false;
+      document.getElementById('transportPlayBtn').textContent = '▶';
+      playheadTime = 0;
+      updatePlayerTime();
+      return;
+    }
+    raf = requestAnimationFrame(tick);
+  }
+  activeOnStop = ()=>{
+    transportPlaying = false;
+    document.getElementById('transportPlayBtn').textContent = '▶';
+    if (raf) cancelAnimationFrame(raf);
+  };
+  src.onended = ()=>{ if (activeSource===src){ transportPlaying=false; document.getElementById('transportPlayBtn').textContent='▶'; activeSource=null; } };
+  tick();
+});
+
+document.getElementById('transportStopBtn').addEventListener('click', ()=>{
+  stopAllPlayback();
+  playheadTime = 0;
+  updatePlayerTime();
+});
+
+document.getElementById('markBtn').addEventListener('click', ()=>{
+  if (!segments) return;
+  const t = playheadTime;
+  const idx = segments.findIndex(s => t > s.start+0.05 && t < s.end-0.05);
+  if (idx < 0){
+    document.getElementById('storyStatus').textContent = 'Cheza rekodi kwanza kisha simamisha karibu na sehemu unayotaka kugawanya.';
+    return;
+  }
+  const seg = segments[idx];
+  segments.splice(idx+1, 0, {start:t, end:seg.end, presetId:seg.presetId});
+  seg.end = t;
+  document.getElementById('storyStatus').textContent = '';
+  renderSegments();
+});
+
+function renderSegments(){
+  const container = document.getElementById('segList');
+  container.innerHTML = '';
+  segments.forEach((seg, idx)=>{
+    const row = document.createElement('div');
+    row.className = 'seg-row';
+    const optionsHtml = PRESETS.map(p=>`<option value="${p.id}" ${p.id===seg.presetId?'selected':''}>${p.name}</option>`).join('');
+    row.innerHTML = `
+      <div class="seg-head">
+        <div class="seg-title">Sehemu ${idx+1}</div>
+        <div class="seg-time">${fmtTime(seg.start)} – ${fmtTime(seg.end)}</div>
+      </div>
+      <select data-idx="${idx}">${optionsHtml}</select>
+      ${idx>0 ? '<button class="seg-merge" data-merge="'+idx+'">✕ Unganisha na sehemu iliyotangulia</button>' : ''}
+    `;
+    row.querySelector('select').addEventListener('change', (e)=>{
+      segments[idx].presetId = e.target.value;
+    });
+    const mergeBtn = row.querySelector('[data-merge]');
+    if (mergeBtn){
+      mergeBtn.addEventListener('click', ()=>{
+        segments[idx-1].end = segments[idx].end;
+        segments.splice(idx,1);
+        renderSegments();
+      });
+    }
+    container.appendChild(row);
+  });
+}
+
+document.getElementById('storyBtn').addEventListener('click', async ()=>{
+  if (!rawSamples || !segments || segments.length===0) return;
+  const storyStatus = document.getElementById('storyStatus');
+  storyStatus.textContent = 'Inachakata wahusika wote...';
+  const echoOn = document.getElementById('echoToggle').checked;
+  try{
+    const parts = [];
+    for (const seg of segments){
+      const startIdx = Math.round(seg.start*STANDARD_RATE);
+      const endIdx = Math.round(seg.end*STANDARD_RATE);
+      const slice = rawSamples.slice(startIdx, endIdx);
+      const preset = getPreset(seg.presetId);
+      const processed = await processVoice(slice, STANDARD_RATE, preset.semitones, preset.extra, echoOn);
+      parts.push(processed);
+    }
+    const combined = concatWithCrossfade(parts, STANDARD_RATE, 15);
+    tlCounter++;
+    const label = `Hadithi (wahusika ${segments.length})`;
+    timeline.push({id: tlCounter, label, samples: combined});
+    renderTimeline();
+    storyStatus.textContent = 'Imetengenezwa na kuongezwa kwenye Rekodi ✓';
+    playBuffer(combined, label);
+  }catch(err){
+    storyStatus.textContent = 'Hitilafu wakati wa kutengeneza hadithi.';
+  }
+});
+
+// ---------- Timeline ----------
+function renderTimeline(){
+  const container = document.getElementById('timeline');
+  document.getElementById('tlCount').textContent = `vipande ${timeline.length}`;
+  document.getElementById('exportBtn').disabled = timeline.length === 0;
+  document.getElementById('clearAllBtn').disabled = timeline.length === 0;
+  if (timeline.length === 0){
+    container.innerHTML = '<div class="tl-empty">Bado hakuna kipande. Ongeza sauti hapo juu ili kianze kuonekana hapa.</div>';
+    return;
+  }
+  container.innerHTML = '';
+  timeline.forEach((clip, idx)=>{
+    const dur = (clip.samples.length/STANDARD_RATE).toFixed(1);
+    const row = document.createElement('div');
+    row.className = 'tl-item';
+    row.innerHTML = `
+      <div class="tl-idx">${idx+1}</div>
+      <div class="tl-info">
+        <div class="tl-name" data-rename="${idx}" title="Bonyeza kubadilisha jina">${clip.label}</div>
+        <div class="tl-sub">${dur}s</div>
+      </div>
+      <div class="tl-controls">
+        <button class="icon-btn" data-act="up" ${idx===0?'disabled':''}>↑</button>
+        <button class="icon-btn" data-act="down" ${idx===timeline.length-1?'disabled':''}>↓</button>
+        <button class="icon-btn" data-act="play">▶</button>
+        <button class="icon-btn" data-act="del">✕</button>
+      </div>
+    `;
+    row.querySelector('[data-act="up"]').addEventListener('click', ()=>{
+      [timeline[idx-1], timeline[idx]] = [timeline[idx], timeline[idx-1]];
+      renderTimeline();
+    });
+    row.querySelector('[data-act="down"]').addEventListener('click', ()=>{
+      [timeline[idx+1], timeline[idx]] = [timeline[idx], timeline[idx+1]];
+      renderTimeline();
+    });
+    row.querySelector('[data-act="play"]').addEventListener('click', ()=>{
+      playBuffer(clip.samples, clip.label);
+    });
+    row.querySelector('[data-act="del"]').addEventListener('click', ()=>{
+      timeline.splice(idx,1);
+      renderTimeline();
+    });
+    const nameEl = row.querySelector('[data-rename]');
+    nameEl.addEventListener('click', ()=>{
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = clip.label;
+      input.style.cssText = 'width:100%;padding:6px;border-radius:6px;border:1px solid var(--line);background:var(--ink);color:var(--paper);font-family:inherit;font-size:14px;';
+      nameEl.replaceWith(input);
+      input.focus();
+      input.select();
+      function commit(){
+        clip.label = input.value.trim() || clip.label;
+        renderTimeline();
+      }
+      input.addEventListener('blur', commit);
+      input.addEventListener('keydown', (e)=>{ if (e.key==='Enter') input.blur(); });
+    });
+    container.appendChild(row);
+  });
+}
+
+document.getElementById('clearAllBtn').addEventListener('click', ()=>{
+  if (timeline.length === 0) return;
+  timeline = [];
+  renderTimeline();
+  document.getElementById('exportStatus').textContent = '';
+});
+
+// ---------- Export ----------
+async function saveWavFile(blob, suggestedName){
+  if (window.showSaveFilePicker){
+    try{
+      const handle = await window.showSaveFilePicker({
+        suggestedName: suggestedName,
+        types: [{description:'WAV Audio', accept:{'audio/wav':['.wav']}}]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return 'saved';
+    }catch(err){
+      if (err && err.name === 'AbortError') return 'cancelled';
+      // fall through to normal download if the picker itself isn't usable
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = suggestedName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+  return 'downloaded';
+}
+
+document.getElementById('exportBtn').addEventListener('click', async ()=>{
+  if (timeline.length === 0) return;
+  const exportStatus = document.getElementById('exportStatus');
+  exportStatus.textContent = 'Inaunganisha vipande...';
+  const combined = concatWithCrossfade(timeline.map(c=>c.samples), STANDARD_RATE, 15);
+  const totalLen = combined.length;
+  const blob = encodeWav(combined, STANDARD_RATE);
+  let name = document.getElementById('exportFilename').value.trim() || 'sauti-studio-recording';
+  name = name.replace(/[\\/:*?"<>|]/g, '').trim() || 'sauti-studio-recording';
+  if (!name.toLowerCase().endsWith('.wav')) name += '.wav';
+  const result = await saveWavFile(blob, name);
+  if (result === 'cancelled'){
+    exportStatus.textContent = 'Hujachagua mahali — jaribu tena.';
+  } else {
+    exportStatus.textContent = `✓ Imehifadhiwa kama "${name}" (${(totalLen/STANDARD_RATE).toFixed(1)}s, vipande ${timeline.length})`;
+  }
+});
+</script>
+</body>
+</html>
